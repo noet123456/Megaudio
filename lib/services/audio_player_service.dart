@@ -7,11 +7,11 @@ class AudioPlayerService {
   /// On Android the audio_service handler owns the player (needed for the
   /// media session / notification / hardware buttons). Elsewhere (Windows,
   /// web) a plain AudioPlayer is used.
-  final AudiophileAudioHandler? _handler;
+  final MegaudioAudioHandler? _handler;
   AudioPlayer? _plain;
   bool _isCustomDspEnabled = true;
 
-  AudioPlayerService({AudiophileAudioHandler? handler}) : _handler = handler {
+  AudioPlayerService({MegaudioAudioHandler? handler}) : _handler = handler {
     final h = _handler;
     if (h != null) {
       h.onSkipNext = () async {

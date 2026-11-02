@@ -34,7 +34,7 @@ class AppDrawer extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'AUDIOPHILE PRO',
+                          'MEGAUDIO',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,

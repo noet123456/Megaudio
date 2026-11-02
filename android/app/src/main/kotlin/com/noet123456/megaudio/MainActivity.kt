@@ -1,4 +1,4 @@
-package com.example.audiophile_pro
+package com.noet123456.megaudio
 
 import com.ryanheise.audioservice.AudioServiceActivity
 

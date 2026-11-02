@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.audiophile_pro"
+    namespace = "com.noet123456.megaudio"
     // Pinned to 36: newer plugin versions (e.g. flutter_plugin_android_lifecycle
     // pulled in by file_picker) require libraries compiled against API 36+.
     compileSdk = 36
@@ -18,7 +18,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.audiophile_pro"
+        applicationId = "com.noet123456.megaudio"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

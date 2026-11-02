@@ -72,7 +72,7 @@ class PlayerProvider with ChangeNotifier {
   Map<String, List<String>> get customAlbums => _customAlbums;
   Map<String, List<String>> get customPlaylists => _customPlaylists;
 
-  PlayerProvider({AudiophileAudioHandler? audioHandler})
+  PlayerProvider({MegaudioAudioHandler? audioHandler})
       : _audioService = AudioPlayerService(handler: audioHandler) {
     // Headset / Bluetooth / lock-screen media buttons follow the same queue
     // logic as the in-app transport controls.

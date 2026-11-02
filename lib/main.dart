@@ -15,13 +15,13 @@ Future<void> main() async {
   // what gives the app a compact media notification, lock-screen controls,
   // headset/Bluetooth buttons and makes the OS treat it as a music player.
   // Windows/web keep using a plain just_audio player.
-  AudiophileAudioHandler? audioHandler;
+  MegaudioAudioHandler? audioHandler;
   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
     audioHandler = await AudioService.init(
-      builder: () => AudiophileAudioHandler(),
+      builder: () => MegaudioAudioHandler(),
       config: const AudioServiceConfig(
-        androidNotificationChannelId: 'com.example.audiophile_pro.audio',
-        androidNotificationChannelName: 'Audiophile Pro',
+        androidNotificationChannelId: 'com.noet123456.megaudio.audio',
+        androidNotificationChannelName: 'Megaudio',
         androidNotificationOngoing: false,
         androidStopForegroundOnPause: true,
         androidNotificationIcon: 'mipmap/ic_launcher',
@@ -35,13 +35,13 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => PlayerProvider(audioHandler: audioHandler)),
       ],
-      child: const AudiophileApp(),
+      child: const MegaudioApp(),
     ),
   );
 }
 
-class AudiophileApp extends StatelessWidget {
-  const AudiophileApp({super.key});
+class MegaudioApp extends StatelessWidget {
+  const MegaudioApp({super.key});
 
   @override
   Widget build(BuildContext context) {

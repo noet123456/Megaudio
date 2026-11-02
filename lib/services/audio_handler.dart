@@ -10,7 +10,7 @@ import '../models/song.dart';
 /// player: compact media notification with artwork and transport controls,
 /// lock-screen card, headset/Bluetooth hardware media buttons, and the
 /// system media picker entry.
-class AudiophileAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
+class MegaudioAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   final AudioPlayer player = AudioPlayer();
 
   /// Wired by AudioPlayerService -> PlayerProvider so the OS "next"/"previous"
@@ -18,7 +18,7 @@ class AudiophileAudioHandler extends BaseAudioHandler with QueueHandler, SeekHan
   Future<void> Function()? onSkipNext;
   Future<void> Function()? onSkipPrevious;
 
-  AudiophileAudioHandler() {
+  MegaudioAudioHandler() {
     player.playbackEventStream.listen((_) => _broadcast(), onError: (_, __) {});
     player.positionStream.listen((p) {
       playbackState.add(playbackState.value.copyWith(
