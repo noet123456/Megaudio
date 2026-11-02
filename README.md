@@ -1,7 +1,6 @@
 # Megaudio
 
-Trình nghe nhạc Hi-Res offline cho Windows / Android / Web, giao diện tối giản kiểu Walkman (nền đen, monochrome, accent hổ phách duy nhất).
-
+Trình nghe nhạc Hi-Res offline cho Windows / Android / Web
 ## Tính năng
 
 - **Thư viện theo thư mục**: chọn folder nhạc (hỗ trợ folder trống, quét đệ quy subfolder, nút quét lại) — MP3 / FLAC / WAV / DSF / AAC / OGG / M4A
@@ -50,7 +49,6 @@ lib/
   providers/    PlayerProvider (thư viện, hàng đợi, shuffle, lịch sử)
   screens/      Home + thư viện + player + equalizer
   services/     Audio player, Android media handler, parser nhị phân
-  theme/        Hệ màu Walkman
   utils/        IO facade (native/web), icon shim
   widgets/      Song row, cover, mini player, drawer, spectrum
 tools/          Build script + test headless
