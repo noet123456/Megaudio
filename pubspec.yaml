@@ -1,7 +1,7 @@
 name: audiophile_pro
 description: "Megaudio - a minimalist Hi-Res offline music player for Windows, Android and Web (MP3/FLAC/WAV/DSF)."
 publish_to: 'none'
-version: 1.7.1+10
+version: 1.8.0+11
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
