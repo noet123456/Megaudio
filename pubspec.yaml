@@ -1,0 +1,28 @@
+name: audiophile_pro
+description: "Megaudio - a minimalist Hi-Res offline music player for Windows, Android and Web (MP3/FLAC/WAV/DSF)."
+publish_to: 'none'
+version: 1.7.1+10
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  just_audio: ^0.9.36
+  audio_session: ^0.1.18
+  audio_service: ^0.18.15
+  file_picker: ^8.0.0
+  permission_handler: ^11.4.0
+  provider: ^6.1.2
+  path_provider: ^2.1.2
+  shared_preferences: ^2.2.2
+  just_audio_windows: ^0.2.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true

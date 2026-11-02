@@ -1,0 +1,59 @@
+# Misc
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Flutter/Dart
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication
+app.*.symbols
+*.symbols
+app.*.map.json
+
+# Android
+/android/app/debug
+/android/app/profile
+/android/app/release
+local.properties
+key.properties
+*.jks
+*.keystore
+
+# Windows generated files
+/windows/flutter/ephemeral/
+/windows/x64/
+
+# Built release artifacts (regenerate with tools/build_release.ps1)
+Releases/
+
+# Local tooling logs
+*.diag.log
+
+# Android generated build output
+/android/build/
+/android/app/build/
+/android/.gradle/
