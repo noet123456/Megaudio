@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/song.dart';
 import '../services/audio_handler.dart';
 import '../services/audio_player_service.dart';
+import '../services/widget_service.dart';
 import '../utils/io_facade.dart';
 
 /// Playlist playback strategy, cycled from the player screen:
@@ -84,16 +85,19 @@ class PlayerProvider with ChangeNotifier {
   Future<void> _init() async {
     _audioService.playerStateStream.listen((state) {
       _isPlaying = state.playing;
+      _syncWidget(force: true);
       notifyListeners();
     });
 
     _audioService.positionStream.listen((pos) {
       _position = pos;
+      _syncWidget();
       notifyListeners();
     });
 
     _audioService.durationStream.listen((dur) {
       _duration = dur ?? Duration.zero;
+      _syncWidget();
       notifyListeners();
     });
 
@@ -121,7 +125,20 @@ class PlayerProvider with ChangeNotifier {
       _musicFolderPath = savedFolder;
       await _scanFolder(savedFolder, autoPlay: false);
     }
+    _syncWidget(force: true);
     notifyListeners();
+  }
+
+  /// Feeds the Android home-screen widget with the current track.
+  void _syncWidget({bool force = false}) {
+    if (!WidgetService.isSupported) return;
+    unawaited(WidgetService.push(
+      song: _audioService.currentSong,
+      playing: _isPlaying,
+      position: _position,
+      duration: _duration,
+      force: force,
+    ));
   }
 
   // ---------------------------------------------------------------------------
@@ -359,6 +376,7 @@ class PlayerProvider with ChangeNotifier {
           ? 'Stream DSD (.dsf) cần phần cứng giải mã DSD riêng — chưa phát được trực tiếp.'
           : 'Không phát được file: ${song.title}';
     }
+    _syncWidget(force: true);
     notifyListeners();
   }
 
@@ -586,6 +604,7 @@ class PlayerProvider with ChangeNotifier {
       }
       if (_audioService.currentSong?.path == song.path) {
         _audioService.currentSong = updated;
+        _syncWidget(force: true);
       }
       notifyListeners();
     } catch (_) {
@@ -619,6 +638,7 @@ class PlayerProvider with ChangeNotifier {
         }
         if (_audioService.currentSong?.path == song.path) {
           _audioService.currentSong = updated;
+          _syncWidget(force: true);
         }
         notifyListeners();
       }

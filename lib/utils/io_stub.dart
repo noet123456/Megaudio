@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import '../models/song.dart';
@@ -12,5 +14,7 @@ Future<List<String>> listAudioFiles(String folderPath) async => const [];
 Future<Song?> inspectAudioFile(String path) async => null;
 
 Future<String?> extractCoverArtFile(String path) async => null;
+
+Future<Uint8List?> readFileBytes(String path) async => null;
 
 Widget? localCoverImage(String path, {BoxFit fit = BoxFit.cover, int? cacheWidth}) => null;

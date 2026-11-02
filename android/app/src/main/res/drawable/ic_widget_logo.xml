@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- vinyl disc: amber outer ring + dark centre -->
+    <path
+        android:fillColor="#D8A657"
+        android:pathData="M48,8a40,40 0,1 0,0 80a40,40 0,1 0,0 -80z" />
+    <path
+        android:fillColor="#1A1A1C"
+        android:pathData="M48,26a22,22 0,1 0,0 44a22,22 0,1 0,0 -44z" />
+    <path
+        android:fillColor="#D8A657"
+        android:pathData="M48,42a6,6 0,1 0,0 12a6,6 0,1 0,0 -12z" />
+</vector>

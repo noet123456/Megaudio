@@ -88,6 +88,16 @@ Future<String> _saveTempCover(Uint8List data, String mime, String sourcePath) as
   return file.path;
 }
 
+/// Reads a file into bytes; null when unreadable (also used by the widget
+/// bridge to sample artwork brightness).
+Future<Uint8List?> readFileBytes(String path) async {
+  try {
+    return await File(path).readAsBytes();
+  } catch (_) {
+    return null;
+  }
+}
+
 /// Decodes an image file into a widget; returns null when unreadable.
 /// [cacheWidth] downscales the decode (memory saver for list thumbnails).
 Widget? localCoverImage(String path, {BoxFit fit = BoxFit.cover, int? cacheWidth}) {
