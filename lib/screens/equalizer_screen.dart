@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../providers/player_provider.dart';
 import '../services/audio_output_service.dart';
+import '../services/eq_presets.dart';
 import '../theme/app_colors.dart';
 import '../utils/app_icons.dart';
 
@@ -17,13 +19,20 @@ class EqualizerScreen extends StatefulWidget {
 }
 
 class _EqualizerScreenState extends State<EqualizerScreen> {
+  static const _prefEqGains = 'eq_gains_v1';
+  static const _prefEqSelected = 'eq_selected_profile_v1';
+  static const _prefEqCustom = 'eq_custom_profiles_v1';
+
   // 10-Band Equalizer Gains (dB from -12 to +12)
-  final List<double> _gains = [0.0, 2.5, 4.0, 1.5, -1.0, 2.0, 3.5, 5.0, 4.5, 3.0];
-  final List<String> _bands = ['32Hz', '64Hz', '125Hz', '250Hz', '500Hz', '1kHz', '2kHz', '4kHz', '8kHz', '16kHz'];
+  List<double> _gains = List<double>.filled(kEqBandLabels.length, 0);
+  final List<String> _bands = kEqBandLabels;
 
   bool _dsfOverSampling = true;
   bool _tubeHarmonicExciter = true;
   bool _spatialSurround = true;
+
+  List<EqPreset> _customPresets = [];
+  String? _selectedPreset = 'Flat';
 
   List<AudioOutputDevice> _outputs = const [];
   bool _loadingOutputs = false;
@@ -32,6 +41,225 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
   void initState() {
     super.initState();
     _loadOutputs();
+    _loadEq();
+  }
+
+  Future<void> _loadEq() async {
+    final prefs = await SharedPreferences.getInstance();
+    final custom = decodeEqPresets(prefs.getString(_prefEqCustom));
+    final gains = decodeEqGains(prefs.getString(_prefEqGains));
+    final selected = prefs.getString(_prefEqSelected);
+    if (!mounted) return;
+    setState(() {
+      _customPresets = custom;
+      if (gains != null) _gains = gains;
+      if (selected != null && _presetByName(selected) != null) {
+        _selectedPreset = selected;
+      }
+    });
+  }
+
+  Future<void> _persistEq() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_prefEqGains, encodeEqGains(_gains));
+    await prefs.setString(_prefEqCustom, encodeEqPresets(_customPresets));
+    if (_selectedPreset == null) {
+      await prefs.remove(_prefEqSelected);
+    } else {
+      await prefs.setString(_prefEqSelected, _selectedPreset!);
+    }
+  }
+
+  EqPreset? _presetByName(String name) {
+    for (final p in kBuiltinEqPresets) {
+      if (p.name == name) return p;
+    }
+    for (final p in _customPresets) {
+      if (p.name == name) return p;
+    }
+    return null;
+  }
+
+  void _applyPreset(EqPreset preset) {
+    setState(() {
+      _gains = List<double>.from(preset.gains);
+      _selectedPreset = preset.name;
+    });
+    _persistEq();
+  }
+
+  void _onGainChanged(int index, double value) {
+    setState(() {
+      _gains[index] = value;
+      // Any manual move makes the curve a custom one.
+      _selectedPreset = null;
+    });
+  }
+
+  Future<void> _promptSavePreset() async {
+    final existing = _selectedPreset != null &&
+        _customPresets.any((p) => p.name == _selectedPreset);
+    final controller = TextEditingController(
+      text: existing ? _selectedPreset : 'EQ của tôi',
+    );
+    final name = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: UiColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(4),
+          side: const BorderSide(color: UiColors.line, width: 0.5),
+        ),
+        title: const Text(
+          'LƯU EQ PROFILE',
+          style: TextStyle(
+            fontSize: 11.5,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 2,
+            color: UiColors.text,
+          ),
+        ),
+        content: Container(
+          height: 40,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: UiColors.bg,
+            border: Border.all(color: UiColors.line, width: 0.5),
+            borderRadius: BorderRadius.circular(3),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.tune, size: 16, color: UiColors.textFaint),
+              const SizedBox(width: 10),
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  autofocus: true,
+                  style: const TextStyle(fontSize: 13, color: UiColors.text),
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    border: InputBorder.none,
+                    hintText: 'Tên profile...',
+                    hintStyle: TextStyle(fontSize: 12.5, color: UiColors.textFaint),
+                  ),
+                  onSubmitted: (v) => Navigator.pop(ctx, v),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(
+              'HỦY',
+              style: TextStyle(fontSize: 10.5, letterSpacing: 1.5, color: UiColors.textDim),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, controller.text),
+            child: const Text(
+              'LƯU',
+              style: TextStyle(
+                fontSize: 10.5,
+                letterSpacing: 1.5,
+                fontWeight: FontWeight.w700,
+                color: UiColors.accent,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) return;
+    final trimmed = (name ?? '').trim();
+    if (trimmed.isEmpty) {
+      controller.dispose();
+      return;
+    }
+    // Keep custom names distinct from the built-in ones.
+    var finalName = trimmed;
+    final clashesWithBuiltin = kBuiltinEqPresets.any(
+      (p) => p.name.toLowerCase() == finalName.toLowerCase(),
+    );
+    final isExistingCustom = _customPresets.any(
+      (p) => p.name.toLowerCase() == finalName.toLowerCase(),
+    );
+    if (clashesWithBuiltin && !isExistingCustom) {
+      finalName = '$trimmed (của tôi)';
+    }
+    final index = _customPresets.indexWhere(
+      (p) => p.name.toLowerCase() == finalName.toLowerCase(),
+    );
+    final preset = EqPreset(
+      name: finalName,
+      gains: List<double>.from(_gains),
+      custom: true,
+    );
+    setState(() {
+      if (index >= 0) {
+        _customPresets[index] = preset;
+      } else {
+        _customPresets = [..._customPresets, preset];
+      }
+      _selectedPreset = preset.name;
+    });
+    controller.dispose();
+    await _persistEq();
+  }
+
+  Future<void> _deletePreset(String name) async {
+    setState(() {
+      _customPresets = _customPresets.where((p) => p.name != name).toList();
+      if (_selectedPreset == name) _selectedPreset = null;
+    });
+    await _persistEq();
+  }
+
+  Widget _presetChip(EqPreset preset) {
+    final selected = _selectedPreset == preset.name;
+    return GestureDetector(
+      onTap: () => _applyPreset(preset),
+      child: Container(
+        padding: EdgeInsets.only(left: 12, right: preset.custom ? 4 : 12),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0x1FD8A657) : Colors.transparent,
+          border: Border.all(
+            color: selected ? UiColors.accent : UiColors.line,
+            width: selected ? 0.9 : 0.5,
+          ),
+          borderRadius: BorderRadius.circular(2),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 150),
+              child: Text(
+                preset.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 10,
+                  letterSpacing: 0.8,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  color: selected ? UiColors.accent : UiColors.textDim,
+                ),
+              ),
+            ),
+            if (preset.custom)
+              GestureDetector(
+                onTap: () => _deletePreset(preset.name),
+                behavior: HitTestBehavior.opaque,
+                child: const Padding(
+                  padding: EdgeInsets.all(5),
+                  child: Icon(Icons.close, size: 12, color: UiColors.textFaint),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _loadOutputs() async {
@@ -164,7 +392,7 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
               padding: EdgeInsets.fromLTRB(16, 6, 16, 0),
               child: Text(
                 'Cắm DAC qua USB-C: Android tự định tuyến âm thanh sang DAC. '
-                'File DSD vẫn cần giải mã phần mềm — Android không truyền DSD thô qua USB.',
+                'Bật "Chuyển DSD sang PCM" để nghe được file DSD trên mọi thiết bị.',
                 style: TextStyle(fontSize: 10, color: UiColors.textFaint, height: 1.5),
               ),
             ),
@@ -186,9 +414,9 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
             ),
           ],
 
-          _sectionLabel('CUSTOM DECODER'),
+          _sectionLabel('DSD / DECODER'),
 
-          // Custom DSP engine toggle.
+          // DSD conversion switch: on = universal playback, off = native DSD.
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: const BoxDecoration(
@@ -204,25 +432,112 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Custom DSD-to-PCM FIR Filter',
+                        'Chuyển DSD sang PCM',
                         style: TextStyle(color: UiColors.text, fontSize: 13.5, fontWeight: FontWeight.w500),
                       ),
                       SizedBox(height: 3),
                       Text(
-                        'Bộ giải mã nhị phân tự viết cho file Hi-Res',
-                        style: TextStyle(color: UiColors.textFaint, fontSize: 11),
+                        'Bật để nghe .dsf trên mọi thiết bị. Tắt để phát DSD gốc '
+                        'khi máy hoặc DAC hỗ trợ giải mã DSD.',
+                        style: TextStyle(color: UiColors.textFaint, fontSize: 11, height: 1.45),
                       ),
                     ],
                   ),
                 ),
                 Switch(
-                  value: provider.isCustomDspEnabled,
-                  onChanged: (_) => provider.toggleCustomDsp(),
+                  value: provider.dsdConvertEnabled,
+                  onChanged: provider.setDsdConvertEnabled,
                   activeThumbColor: UiColors.accent,
                   inactiveThumbColor: UiColors.textFaint,
                   inactiveTrackColor: UiColors.line,
                 ),
               ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Text(
+              provider.dsdConvertEnabled
+                  ? 'Đang bật: file .dsf được chuyển thành WAV PCM 88.2kHz/16-bit '
+                      'và lưu đệm cho lần phát sau.'
+                  : 'Đang tắt: file .dsf được gửi trực tiếp tới thiết bị phát. '
+                      'Nếu máy không hỗ trợ DSD, hãy bật lại tuỳ chọn này.',
+              style: const TextStyle(fontSize: 10, color: UiColors.textFaint, height: 1.5),
+            ),
+          ),
+
+          _sectionLabel('EQ PROFILE'),
+
+          SizedBox(
+            height: 34,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: [
+                if (_selectedPreset == null)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Container(
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0x1FD8A657),
+                        border: Border.all(color: UiColors.accent, width: 0.9),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                      child: const Text(
+                        'Tùy chỉnh',
+                        style: TextStyle(
+                          fontSize: 10,
+                          letterSpacing: 0.8,
+                          fontWeight: FontWeight.w700,
+                          color: UiColors.accent,
+                        ),
+                      ),
+                    ),
+                  ),
+                for (final preset in [...kBuiltinEqPresets, ..._customPresets])
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: _presetChip(preset),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: GestureDetector(
+                    onTap: _promptSavePreset,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: UiColors.accent, width: 0.5),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.add, size: 13, color: UiColors.accent),
+                          SizedBox(width: 5),
+                          Text(
+                            'LƯU EQ',
+                            style: TextStyle(
+                              fontSize: 10,
+                              letterSpacing: 1.2,
+                              fontWeight: FontWeight.w600,
+                              color: UiColors.accent,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Text(
+              'Chọn profile có sẵn hoặc lưu dải tần hiện tại thành profile riêng. '
+              'Nhấn × trên profile tự tạo để xoá.',
+              style: TextStyle(fontSize: 10, color: UiColors.textFaint, height: 1.5),
             ),
           ),
 
@@ -266,11 +581,8 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
                               value: _gains[index],
                               min: -12.0,
                               max: 12.0,
-                              onChanged: (val) {
-                                setState(() {
-                                  _gains[index] = val;
-                                });
-                              },
+                              onChanged: (val) => _onGainChanged(index, val),
+                              onChangeEnd: (_) => _persistEq(),
                             ),
                           ),
                         ),

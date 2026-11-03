@@ -29,6 +29,7 @@ class PlayerProvider with ChangeNotifier {
   static const _prefPlayCounts = 'play_count_map_v1';
   static const _prefCustomAlbums = 'custom_albums_v1';
   static const _prefCustomPlaylists = 'custom_playlists_v1';
+  static const _prefDsdConvert = 'dsd_convert_enabled';
 
   final AudioPlayerService _audioService;
   final Random _rng = Random();
@@ -49,6 +50,7 @@ class PlayerProvider with ChangeNotifier {
   bool _askedNotificationPermission = false;
   bool _dsdConverting = false;
   double _dsdProgress = 0;
+  bool _dsdConvertEnabled = true;
 
   // --- library state (history / stats / collections) ---
   List<RecentEntry> _recent = [];
@@ -75,6 +77,10 @@ class PlayerProvider with ChangeNotifier {
   /// True while a .dsf file is being converted to PCM before playback.
   bool get isConvertingDsd => _dsdConverting;
   double get dsdProgress => _dsdProgress;
+
+  /// When enabled, DSF files are converted to PCM so they play on devices
+  /// without native DSD support. Turn it off to let the OS/DAC handle DSD.
+  bool get dsdConvertEnabled => _dsdConvertEnabled;
 
   List<RecentEntry> get recent => _recent;
   Map<String, List<String>> get customAlbums => _customAlbums;
@@ -125,6 +131,7 @@ class PlayerProvider with ChangeNotifier {
     for (final m in PlayMode.values) {
       if (m.name == savedMode) _playMode = m;
     }
+    _dsdConvertEnabled = prefs.getBool(_prefDsdConvert) ?? true;
     _loadLibraryState(prefs);
 
     final savedFolder = prefs.getString(_prefFolder);
@@ -374,9 +381,11 @@ class PlayerProvider with ChangeNotifier {
     unawaited(_ensureCover(song));
 
     // DSD is not decodable by Android/Windows media stacks, so those files are
-    // converted to PCM (cached) before playback.
+    // converted to PCM (cached) before playback — unless the user disabled the
+    // conversion to let the device/DAC handle DSD itself.
     String? playPath;
-    if (song.format == AudioFormat.dsf) {
+    final convertDsd = song.format == AudioFormat.dsf && _dsdConvertEnabled;
+    if (convertDsd) {
       _dsdConverting = true;
       _dsdProgress = 0;
       _errorMessage = null;
@@ -406,7 +415,9 @@ class PlayerProvider with ChangeNotifier {
       _recordPlay(song);
     } else {
       _isPlaying = false;
-      _errorMessage = 'Không phát được file: ${song.title}';
+      _errorMessage = song.format == AudioFormat.dsf && !_dsdConvertEnabled
+          ? 'Thiết bị không giải mã trực tiếp được DSD. Hãy bật "Chuyển DSD sang PCM" trong DSP.'
+          : 'Không phát được file: ${song.title}';
     }
     _syncWidget(force: true);
     notifyListeners();
@@ -527,6 +538,12 @@ class PlayerProvider with ChangeNotifier {
   void toggleCustomDsp() {
     _audioService.toggleCustomDsp();
     SharedPreferences.getInstance().then((p) => p.setBool(_prefDsp, _audioService.isCustomDspEnabled));
+    notifyListeners();
+  }
+
+  void setDsdConvertEnabled(bool value) {
+    _dsdConvertEnabled = value;
+    SharedPreferences.getInstance().then((p) => p.setBool(_prefDsdConvert, value));
     notifyListeners();
   }
 

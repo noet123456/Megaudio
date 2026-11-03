@@ -2,6 +2,12 @@
 
 Mỗi mục tương ứng một bản build và được dùng làm release notes trên GitHub.
 
+## v1.10.1+18
+- Thêm công tắc chuyển DSD sang PCM trong DSP: tắt để phát DSD gốc trên thiết bị/DAC hỗ trợ, bật để nghe được trên mọi máy.
+- EQ có sẵn các profile theo thể loại: Rock, Pop, Jazz, Classical, Hip-Hop, Electronic, Acoustic, Vocal, Bass+ và Treble+.
+- Có thể lưu dải tần hiện tại thành profile EQ riêng, ghi đè hoặc xoá profile tự tạo.
+- Profile đã chọn và dải tần được ghi nhớ giữa các lần mở app.
+
 ## v1.10.0+17
 - Phát được file DSD (.dsf) trên mọi thiết bị (máy không hỗ trợ DSD vẫn nghe được).
 - Hiển thị tiến trình chuyển đổi khi mở file DSD lần đầu; các lần sau phát ngay nhờ bộ nhớ đệm.
