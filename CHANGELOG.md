@@ -2,6 +2,12 @@
 
 Mỗi mục tương ứng một bản build và được dùng làm release notes trên GitHub.
 
+## v1.9.3+16
+- **Khung thông báo media:** metadata đầy đủ (tên bài, nghệ sĩ + định dạng), màu nút điều khiển theo màu tên bài, nút tua trong notification khớp ±10s với app.
+- **Nhận diện DAC:** màn DSP có thêm mục "Thiết bị ra âm thanh" — liệt kê thiết bị ra đang kết nối (USB DAC / 3.5mm / Bluetooth / loa trong), đánh dấu DAC màu hổ phách kèm sample rate tối đa; có nút làm mới.
+- Android tự định tuyến âm thanh sang DAC khi cắm USB-C. File DSD vẫn cần giải mã phần mềm vì Android không truyền DSD thô qua USB.
+- Tên bài quá dài trên khung thông báo do hệ thống tự cắt (thẻ media Android 13+ do OS vẽ, app không điều khiển được chế độ chạy chữ).
+
 ## v1.9.2+15
 - **Sửa lỗi giao diện:** thanh thu gọn (mini player) bị giãn tràn toàn màn hình khi mở các mục phân loại (Tất cả bài hát, Nghệ sĩ, Album, Thể loại, Playlist, Nghe gần đây, Lâu chưa nghe).
 - Nguyên nhân: `Column` bên trong thanh dùng `mainAxisSize` mặc định là `max` nên giãn hết chiều cao còn trống của `Scaffold.bottomNavigationBar`; đã đổi sang `min`.

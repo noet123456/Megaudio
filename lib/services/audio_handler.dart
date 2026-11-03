@@ -78,6 +78,11 @@ class MegaudioAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
       album: song.album,
       duration: song.duration > Duration.zero ? song.duration : null,
       artUri: song.coverPath.isNotEmpty ? Uri.file(song.coverPath) : null,
+      // Full strings for the notification / media card; the OS decides how
+      // much of them fits on one line.
+      displayTitle: song.title,
+      displaySubtitle: '${song.artist} · ${song.specsLabel}',
+      displayDescription: song.album,
       extras: {'specs': song.specsLabel},
     ));
     await player.setFilePath(song.path);

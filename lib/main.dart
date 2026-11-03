@@ -26,6 +26,11 @@ Future<void> main() async {
         androidStopForegroundOnPause: true,
         androidNotificationIcon: 'mipmap/ic_launcher',
         androidShowNotificationBadge: false,
+        // Tint for the media notification controls, matching the title colour.
+        notificationColor: UiColors.text,
+        // Keep the notification seek buttons in sync with the in-app +/-10s.
+        fastForwardInterval: Duration(seconds: 10),
+        rewindInterval: Duration(seconds: 10),
       ),
     );
   }

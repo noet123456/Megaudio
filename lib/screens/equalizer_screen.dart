@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/player_provider.dart';
+import '../services/audio_output_service.dart';
 import '../theme/app_colors.dart';
 import '../utils/app_icons.dart';
 
@@ -23,6 +24,26 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
   bool _dsfOverSampling = true;
   bool _tubeHarmonicExciter = true;
   bool _spatialSurround = true;
+
+  List<AudioOutputDevice> _outputs = const [];
+  bool _loadingOutputs = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOutputs();
+  }
+
+  Future<void> _loadOutputs() async {
+    if (!AudioOutputService.isSupported) return;
+    setState(() => _loadingOutputs = true);
+    final list = await AudioOutputService.outputs();
+    if (!mounted) return;
+    setState(() {
+      _outputs = list;
+      _loadingOutputs = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +73,119 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
       body: ListView(
         padding: const EdgeInsets.only(bottom: 32),
         children: [
+          if (AudioOutputService.isSupported) ...[
+            _sectionLabel('THIẾT BỊ RA ÂM THANH'),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: const BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: UiColors.line, width: 0.5),
+                  bottom: BorderSide(color: UiColors.line, width: 0.5),
+                ),
+              ),
+              child: Column(
+                children: [
+                  if (_loadingOutputs)
+                    const Row(
+                      children: [
+                        SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: UiColors.textDim),
+                        ),
+                        SizedBox(width: 12),
+                        Text('Đang đọc thiết bị...',
+                            style: TextStyle(fontSize: 11, color: UiColors.textFaint)),
+                      ],
+                    )
+                  else if (_outputs.isEmpty)
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('Không đọc được thiết bị ra.',
+                          style: TextStyle(fontSize: 11, color: UiColors.textFaint)),
+                    )
+                  else
+                    for (final device in _outputs)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Row(
+                          children: [
+                            Icon(
+                              device.isDac
+                                  ? Icons.usb
+                                  : device.type == 'Bluetooth'
+                                      ? Icons.bluetooth
+                                      : Icons.headphones,
+                              size: 18,
+                              color: device.isDac ? UiColors.accent : UiColors.textFaint,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    device.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontSize: 13, color: UiColors.text),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    device.maxSampleRate > 0
+                                        ? '${device.type} · ${(device.maxSampleRate / 1000).toStringAsFixed(1)} kHz'
+                                        : device.type,
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      fontFamily: 'monospace',
+                                      color: UiColors.textFaint,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (device.isDac)
+                              const Text(
+                                'DAC',
+                                style: TextStyle(
+                                  fontSize: 9.5,
+                                  letterSpacing: 1.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: UiColors.accent,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                ],
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 6, 16, 0),
+              child: Text(
+                'Cắm DAC qua USB-C: Android tự định tuyến âm thanh sang DAC. '
+                'File DSD vẫn cần giải mã phần mềm — Android không truyền DSD thô qua USB.',
+                style: TextStyle(fontSize: 10, color: UiColors.textFaint, height: 1.5),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 2, 16, 0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: _loadOutputs,
+                  style: TextButton.styleFrom(
+                    foregroundColor: UiColors.textDim,
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    minimumSize: Size.zero,
+                  ),
+                  icon: const Icon(Icons.refresh, size: 14),
+                  label: const Text('LÀM MỚI', style: TextStyle(fontSize: 10, letterSpacing: 1)),
+                ),
+              ),
+            ),
+          ],
+
           _sectionLabel('CUSTOM DECODER'),
 
           // Custom DSP engine toggle.
