@@ -45,28 +45,30 @@ class AudioPlayerService {
   Stream<Duration?> get durationStream => _player.durationStream;
   Stream<ProcessingState> get processingStateStream => _player.processingStateStream;
 
-  /// Loads a real audio file or stream URL and starts playback.
-  /// Returns false (without throwing) when the backend cannot decode the file,
-  /// e.g. DSD streams that the Windows Media Foundation cannot handle.
-  Future<bool> loadSong(Song song) {
-    final task = _loadQueue.then((_) => _doLoad(song));
+  /// Loads a real audio file and starts playback. [playPath] lets a
+  /// converted copy (e.g. DSD -> PCM WAV) be played while the song metadata
+  /// still points at the original file.
+  /// Returns false (without throwing) when the backend cannot decode the file.
+  Future<bool> loadSong(Song song, {String? playPath}) {
+    final task = _loadQueue.then((_) => _doLoad(song, playPath));
     // Keep the queue alive even when a load fails.
     _loadQueue = task.then<void>((_) {}, onError: (_) {});
     return task;
   }
 
-  Future<bool> _doLoad(Song song) async {
+  Future<bool> _doLoad(Song song, String? playPath) async {
     currentSong = song;
-    if (song.path.isEmpty) return false;
+    final path = playPath ?? song.path;
+    if (path.isEmpty) return false;
     try {
       // On Android the handler publishes media metadata + state; elsewhere a
       // plain player handles the local file.
       final h = _handler;
       if (h != null) {
-        await h.loadSong(song);
+        await h.loadSong(song, playPath: path);
         return true;
       }
-      await _player.setFilePath(song.path);
+      await _player.setFilePath(path);
       await _player.play();
       return true;
     } catch (_) {

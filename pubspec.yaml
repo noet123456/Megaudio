@@ -1,7 +1,7 @@
 name: megaudio
 description: "Megaudio - a minimalist Hi-Res offline music player for Windows, Android and Web (MP3/FLAC/WAV/DSF)."
 publish_to: 'none'
-version: 1.9.3+16
+version: 1.10.0+17
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

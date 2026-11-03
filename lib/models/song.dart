@@ -32,13 +32,14 @@ class Song {
   Song copyWith({
     String? coverPath,
     Duration? duration,
+    String? path,
   }) =>
       Song(
         id: id,
         title: title,
         artist: artist,
         album: album,
-        path: path,
+        path: path ?? this.path,
         duration: duration ?? this.duration,
         format: format,
         sampleRate: sampleRate,

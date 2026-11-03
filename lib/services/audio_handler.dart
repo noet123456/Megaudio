@@ -69,8 +69,9 @@ class MegaudioAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     ));
   }
 
-  /// Publishes the track metadata and starts playback.
-  Future<void> loadSong(Song song) async {
+  /// Publishes the track metadata and starts playback. [playPath] may point
+  /// at a converted copy (DSD -> PCM WAV) instead of the original file.
+  Future<void> loadSong(Song song, {String? playPath}) async {
     mediaItem.add(MediaItem(
       id: song.id,
       title: song.title,
@@ -85,7 +86,7 @@ class MegaudioAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
       displayDescription: song.album,
       extras: {'specs': song.specsLabel},
     ));
-    await player.setFilePath(song.path);
+    await player.setFilePath(playPath ?? song.path);
     await player.play();
   }
 

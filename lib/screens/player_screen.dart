@@ -171,6 +171,31 @@ class PlayerScreen extends StatelessWidget {
               ),
               const SizedBox(height: 10),
 
+              // DSD conversion progress (first play of a .dsf file).
+              if (provider.isConvertingDsd)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: UiColors.accent),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Chuyển DSD → PCM · ${(provider.dsdProgress * 100).round()}%',
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontFamily: 'monospace',
+                          color: UiColors.textFaint,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
               Text(
                 song.title,
                 style: const TextStyle(
@@ -266,10 +291,16 @@ class PlayerScreen extends StatelessWidget {
                     child: IconButton(
                       iconSize: 30,
                       padding: EdgeInsets.zero,
-                      icon: Icon(
-                        provider.isPlaying ? LucideIcons.pause : LucideIcons.play,
-                        color: UiColors.text,
-                      ),
+                      icon: provider.isConvertingDsd
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: UiColors.accent),
+                            )
+                          : Icon(
+                              provider.isPlaying ? LucideIcons.pause : LucideIcons.play,
+                              color: UiColors.text,
+                            ),
                       onPressed: () => provider.togglePlayPause(),
                     ),
                   ),

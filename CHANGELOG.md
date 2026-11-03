@@ -2,6 +2,11 @@
 
 Mỗi mục tương ứng một bản build và được dùng làm release notes trên GitHub.
 
+## v1.10.0+17
+- Phát được file DSD (.dsf) trên mọi thiết bị (máy không hỗ trợ DSD vẫn nghe được).
+- Hiển thị tiến trình chuyển đổi khi mở file DSD lần đầu; các lần sau phát ngay nhờ bộ nhớ đệm.
+- Cải thiện thông báo khi không phát được file.
+
 ## v1.9.3+16
 - **Khung thông báo media:** metadata đầy đủ (tên bài, nghệ sĩ + định dạng), màu nút điều khiển theo màu tên bài, nút tua trong notification khớp ±10s với app.
 - **Nhận diện DAC:** màn DSP có thêm mục "Thiết bị ra âm thanh" — liệt kê thiết bị ra đang kết nối (USB DAC / 3.5mm / Bluetooth / loa trong), đánh dấu DAC màu hổ phách kèm sample rate tối đa; có nút làm mới.

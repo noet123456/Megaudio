@@ -55,7 +55,9 @@ class MiniPlayerBar extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        song.specsLabel,
+                        provider.isConvertingDsd
+                            ? 'Chuyển DSD → PCM ${(provider.dsdProgress * 100).round()}%'
+                            : song.specsLabel,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontSize: 10, color: UiColors.textFaint),

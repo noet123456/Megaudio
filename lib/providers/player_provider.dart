@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/song.dart';
 import '../services/audio_handler.dart';
 import '../services/audio_player_service.dart';
+import '../services/dsd/dsd_converter.dart';
 import '../services/widget_service.dart';
 import '../utils/io_facade.dart';
 
@@ -46,6 +47,8 @@ class PlayerProvider with ChangeNotifier {
   PlayMode _playMode = PlayMode.sequential;
   bool _coverExtracting = false;
   bool _askedNotificationPermission = false;
+  bool _dsdConverting = false;
+  double _dsdProgress = 0;
 
   // --- library state (history / stats / collections) ---
   List<RecentEntry> _recent = [];
@@ -68,6 +71,10 @@ class PlayerProvider with ChangeNotifier {
   String? get errorMessage => _errorMessage;
   bool get isCustomDspEnabled => _audioService.isCustomDspEnabled;
   PlayMode get playMode => _playMode;
+
+  /// True while a .dsf file is being converted to PCM before playback.
+  bool get isConvertingDsd => _dsdConverting;
+  double get dsdProgress => _dsdProgress;
 
   List<RecentEntry> get recent => _recent;
   Map<String, List<String>> get customAlbums => _customAlbums;
@@ -366,15 +373,40 @@ class PlayerProvider with ChangeNotifier {
 
     unawaited(_ensureCover(song));
 
-    final ok = await _audioService.loadSong(song);
+    // DSD is not decodable by Android/Windows media stacks, so those files are
+    // converted to PCM (cached) before playback.
+    String? playPath;
+    if (song.format == AudioFormat.dsf) {
+      _dsdConverting = true;
+      _dsdProgress = 0;
+      _errorMessage = null;
+      notifyListeners();
+      var lastNotified = -1;
+      playPath = await convertDsfToWav(song.path, onProgress: (p) {
+        _dsdProgress = p;
+        final pct = (p * 100).round();
+        if (pct >= lastNotified + 2 || pct == 100) {
+          lastNotified = pct;
+          notifyListeners();
+        }
+      });
+      _dsdConverting = false;
+      _dsdProgress = 0;
+      if (playPath == null) {
+        _isPlaying = false;
+        _errorMessage = 'Không chuyển được file DSD: ${song.title}';
+        notifyListeners();
+        return;
+      }
+    }
+
+    final ok = await _audioService.loadSong(song, playPath: playPath);
     if (ok) {
       await _audioService.setRepeatOne(_playMode == PlayMode.repeatOne);
       _recordPlay(song);
     } else {
       _isPlaying = false;
-      _errorMessage = song.format == AudioFormat.dsf
-          ? 'Stream DSD (.dsf) cần phần cứng giải mã DSD riêng — chưa phát được trực tiếp.'
-          : 'Không phát được file: ${song.title}';
+      _errorMessage = 'Không phát được file: ${song.title}';
     }
     _syncWidget(force: true);
     notifyListeners();
