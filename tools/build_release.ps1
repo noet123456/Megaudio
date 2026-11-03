@@ -12,7 +12,8 @@ param(
     [string[]]$Targets = @('windows', 'apk', 'web')
 )
 
-$ErrorActionPreference = 'Stop'
+# Flutter prints progress on stderr; use Continue + explicit $LASTEXITCODE checks.
+$ErrorActionPreference = 'Continue'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $flutterBat  = 'E:\Flutter\flutter\bin\flutter.bat'
 $env:JAVA_HOME = 'E:\Flutter\jdk\jdk-17.0.20.1+1'

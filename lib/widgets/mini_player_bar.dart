@@ -37,6 +37,10 @@ class MiniPlayerBar extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
+                    // Must be min: inside Scaffold.bottomNavigationBar the
+                    // available height is the whole screen, and MainAxisSize.max
+                    // would stretch the bar over the entire screen.
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
