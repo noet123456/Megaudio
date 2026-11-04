@@ -2,6 +2,11 @@
 
 Mỗi mục tương ứng một bản build và được dùng làm release notes trên GitHub.
 
+## v1.10.2+19
+- Khung thông báo nhạc: nút điều khiển hiển thị rõ trên mọi ảnh bìa, kể cả bìa sáng màu.
+- Tên bài và tên ca sĩ dễ đọc hơn nhờ nền thông báo tương phản theo ảnh bìa.
+- Khung thông báo giữ nguyên khi tạm dừng phát.
+
 ## v1.10.1+18
 - Thêm công tắc chuyển DSD sang PCM trong DSP: tắt để phát DSD gốc trên thiết bị/DAC hỗ trợ, bật để nghe được trên mọi máy.
 - EQ có sẵn các profile theo thể loại: Rock, Pop, Jazz, Classical, Hip-Hop, Electronic, Acoustic, Vocal, Bass+ và Treble+.

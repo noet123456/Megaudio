@@ -2,6 +2,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../models/song.dart';
+import 'notification_art.dart';
 
 /// Android media session handler.
 ///
@@ -72,13 +73,16 @@ class MegaudioAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   /// Publishes the track metadata and starts playback. [playPath] may point
   /// at a converted copy (DSD -> PCM WAV) instead of the original file.
   Future<void> loadSong(Song song, {String? playPath}) async {
+    final art = song.coverPath.isNotEmpty
+        ? await notificationArtPath(song.coverPath)
+        : '';
     mediaItem.add(MediaItem(
       id: song.id,
       title: song.title,
       artist: song.artist,
       album: song.album,
       duration: song.duration > Duration.zero ? song.duration : null,
-      artUri: song.coverPath.isNotEmpty ? Uri.file(song.coverPath) : null,
+      artUri: art.isNotEmpty ? Uri.file(art) : null,
       // Full strings for the notification / media card; the OS decides how
       // much of them fits on one line.
       displayTitle: song.title,

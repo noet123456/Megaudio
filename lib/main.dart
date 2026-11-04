@@ -23,11 +23,11 @@ Future<void> main() async {
         androidNotificationChannelId: 'com.noet123456.megaudio.audio',
         androidNotificationChannelName: 'Megaudio',
         androidNotificationOngoing: false,
-        androidStopForegroundOnPause: true,
+        // Keep the foreground service (and the media card with its controls)
+        // alive while paused, instead of dropping back to a plain notification.
+        androidStopForegroundOnPause: false,
         androidNotificationIcon: 'mipmap/ic_launcher',
         androidShowNotificationBadge: false,
-        // Tint for the media notification controls, matching the title colour.
-        notificationColor: UiColors.text,
         // Keep the notification seek buttons in sync with the in-app +/-10s.
         fastForwardInterval: Duration(seconds: 10),
         rewindInterval: Duration(seconds: 10),
