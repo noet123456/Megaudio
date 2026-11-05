@@ -1,0 +1,17 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Translucent disc keeps the glyph readable on bright notification
+         backgrounds (Android 9 tints the media card with the cover palette). -->
+    <path
+        android:fillColor="#66000000"
+        android:pathData="M12,12m-11,0a11,11 0,1 1,22 0a11,11 0,1 1,-22 0" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M9.2,6.2L18.4,12L9.2,17.8Z"
+        android:strokeColor="#99000000"
+        android:strokeLineJoin="round"
+        android:strokeWidth="0.8" />
+</vector>

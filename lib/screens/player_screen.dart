@@ -34,13 +34,6 @@ String _modeTooltip(PlayMode mode) {
 class PlayerScreen extends StatelessWidget {
   const PlayerScreen({super.key});
 
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final minutes = twoDigits(duration.inMinutes.remainder(60));
-    final seconds = twoDigits(duration.inSeconds.remainder(60));
-    return '$minutes:$seconds';
-  }
-
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<PlayerProvider>(context);
@@ -56,10 +49,6 @@ class PlayerScreen extends StatelessWidget {
       );
     }
 
-    final totalMs = provider.duration.inMilliseconds.toDouble();
-    final posMs = provider.position.inMilliseconds
-        .toDouble()
-        .clamp(0.0, totalMs > 0 ? totalMs : 1.0);
     final total = provider.playlist.length;
     final index = provider.currentIndex >= 0 ? provider.currentIndex : 0;
 
@@ -218,51 +207,9 @@ class PlayerScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              // Seekbar: thin 2px line, amber active track.
-              SliderTheme(
-                data: const SliderThemeData(
-                  trackHeight: 2,
-                  thumbShape: RoundSliderThumbShape(enabledThumbRadius: 3.5),
-                  overlayShape: RoundSliderOverlayShape(overlayRadius: 12),
-                  activeTrackColor: UiColors.accent,
-                  inactiveTrackColor: UiColors.line,
-                  thumbColor: UiColors.text,
-                  overlayColor: Color(0x22D8A657),
-                ),
-                child: Slider(
-                  value: posMs,
-                  max: totalMs > 0 ? totalMs : 1.0,
-                  onChanged: totalMs > 0
-                      ? (val) {
-                          provider.seek(Duration(milliseconds: val.toInt()));
-                        }
-                      : null,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      _formatDuration(provider.position),
-                      style: const TextStyle(
-                        fontSize: 10.5,
-                        fontFamily: 'monospace',
-                        color: UiColors.textFaint,
-                      ),
-                    ),
-                    Text(
-                      _formatDuration(provider.duration),
-                      style: const TextStyle(
-                        fontSize: 10.5,
-                        fontFamily: 'monospace',
-                        color: UiColors.textFaint,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              // Seekbar + elapsed/total. It listens to the position notifier
+              // directly so playback ticks never rebuild the library screens.
+              _SeekBar(provider: provider),
               const SizedBox(height: 10),
 
               // Transport controls: prev | -10s | play | +10s | next
@@ -388,4 +335,96 @@ class _CoverArtwork extends StatelessWidget {
           child: Icon(LucideIcons.music, size: 56, color: UiColors.textFaint),
         ),
       );
+}
+
+String _formatDuration(Duration duration) {
+  String twoDigits(int n) => n.toString().padLeft(2, '0');
+  final minutes = twoDigits(duration.inMinutes.remainder(60));
+  final seconds = twoDigits(duration.inSeconds.remainder(60));
+  return '$minutes:$seconds';
+}
+
+/// Thin seek bar that only rebuilds itself on position ticks. While dragging,
+/// the thumb follows the finger and the seek is sent once on release, so the
+/// native player is not flooded with seek calls.
+class _SeekBar extends StatefulWidget {
+  const _SeekBar({required this.provider});
+
+  final PlayerProvider provider;
+
+  @override
+  State<_SeekBar> createState() => _SeekBarState();
+}
+
+class _SeekBarState extends State<_SeekBar> {
+  double? _dragMs;
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = widget.provider;
+    return ValueListenableBuilder<Duration>(
+      valueListenable: provider.positionNotifier,
+      builder: (context, position, _) {
+        final duration = provider.duration;
+        final totalMs = duration.inMilliseconds.toDouble();
+        final shown = _dragMs ?? position.inMilliseconds.toDouble();
+        final value = shown.clamp(0.0, totalMs > 0 ? totalMs : 1.0);
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SliderTheme(
+              data: const SliderThemeData(
+                trackHeight: 2,
+                thumbShape: RoundSliderThumbShape(enabledThumbRadius: 3.5),
+                overlayShape: RoundSliderOverlayShape(overlayRadius: 12),
+                activeTrackColor: UiColors.accent,
+                inactiveTrackColor: UiColors.line,
+                thumbColor: UiColors.text,
+                overlayColor: Color(0x22D8A657),
+              ),
+              child: Slider(
+                value: value,
+                max: totalMs > 0 ? totalMs : 1.0,
+                onChanged: totalMs > 0
+                    ? (val) => setState(() => _dragMs = val)
+                    : null,
+                onChangeEnd: totalMs > 0
+                    ? (val) {
+                        setState(() => _dragMs = null);
+                        provider.seek(Duration(milliseconds: val.toInt()));
+                      }
+                    : null,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _formatDuration(_dragMs != null
+                        ? Duration(milliseconds: _dragMs!.toInt())
+                        : position),
+                    style: const TextStyle(
+                      fontSize: 10.5,
+                      fontFamily: 'monospace',
+                      color: UiColors.textFaint,
+                    ),
+                  ),
+                  Text(
+                    _formatDuration(duration),
+                    style: const TextStyle(
+                      fontSize: 10.5,
+                      fontFamily: 'monospace',
+                      color: UiColors.textFaint,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }

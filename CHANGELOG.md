@@ -2,6 +2,12 @@
 
 Mỗi mục tương ứng một bản build và được dùng làm release notes trên GitHub.
 
+## v1.10.3+20
+- Chuyển bài khi đang phát nhanh và ổn định hơn, kể cả khi chọn bài khác trong danh sách.
+- Thanh thông báo hiển thị rõ tên bài, ca sĩ và các nút điều khiển trên mọi ảnh bìa.
+- Thanh tiến trình phát mượt hơn và không làm chậm thao tác trên thư viện.
+- Cài đè bản cũ như bình thường, giữ nguyên thư viện, EQ và lịch sử nghe.
+
 ## v1.10.2+19
 - Khung thông báo nhạc: nút điều khiển hiển thị rõ trên mọi ảnh bìa, kể cả bìa sáng màu.
 - Tên bài và tên ca sĩ dễ đọc hơn nhờ nền thông báo tương phản theo ảnh bìa.

@@ -75,3 +75,5 @@ Targets: $($Targets -join ', ')
 Set-Content (Join-Path $dstRoot 'BUILD_INFO.txt') $info
 
 Write-Host "`n=== DONE - Releases\v$version ===" -ForegroundColor Cyan
+# robocopy uses 1 for "files copied", which must not look like a failure.
+exit 0

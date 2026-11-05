@@ -1,8 +1,25 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// The release signing material (android/key.properties + keystore) is kept on
+// disk and git-ignored so it can be enabled later. Sideload builds currently
+// use the debug key so updates install over the existing debug-signed app
+// without an uninstall; switching to the release key later requires one
+// uninstall of the debug-signed build. To enable it, change the release
+// buildType below to use signingConfigs.getByName("release").
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties().apply {
+    if (keystorePropertiesFile.exists()) {
+        FileInputStream(keystorePropertiesFile).use { load(it) }
+    }
+}
+val hasReleaseKeystore = keystorePropertiesFile.exists()
 
 android {
     namespace = "com.noet123456.megaudio"
@@ -31,10 +48,25 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (hasReleaseKeystore) {
+            create("release") {
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // Debug key on purpose: the app has been distributed as debug-signed
+            // so far, and matching it lets every sideload update install over
+            // the existing app without uninstalling (no lost library paths, EQ
+            // profiles or listening history). The release keystore is already
+            // configured above for a future switch to Play / stricter signing;
+            // that switch is a one-time uninstall.
             signingConfig = signingConfigs.getByName("debug")
         }
     }

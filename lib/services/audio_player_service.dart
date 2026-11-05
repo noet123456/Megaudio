@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:just_audio/just_audio.dart';
 
 import '../models/song.dart';
@@ -69,7 +71,8 @@ class AudioPlayerService {
         return true;
       }
       await _player.setFilePath(path);
-      await _player.play();
+      // Do not await play(): its future resolves only when the track ends.
+      unawaited(_player.play().catchError((Object _) {}));
       return true;
     } catch (_) {
       return false;
@@ -82,7 +85,8 @@ class AudioPlayerService {
       if (h != null) {
         await h.play();
       } else {
-        await _player.play();
+        // Same rule as above: play() resolves at the end of the track.
+        unawaited(_player.play().catchError((Object _) {}));
       }
     } catch (_) {}
   }

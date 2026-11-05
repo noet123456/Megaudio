@@ -34,6 +34,11 @@ class PlayerProvider with ChangeNotifier {
   final AudioPlayerService _audioService;
   final Random _rng = Random();
 
+  /// High-frequency playback position. Only widgets that display progress
+  /// (the player seek bar) listen to this; position ticks must not rebuild the
+  /// library screens, which would make track switching feel sluggish.
+  final ValueNotifier<Duration> positionNotifier = ValueNotifier(Duration.zero);
+
   // --- playback / queue ---
   List<Song> _playlist = []; // active queue (library or a filtered view)
   List<Song> _librarySongs = []; // the folder library (source of truth)
@@ -104,8 +109,8 @@ class PlayerProvider with ChangeNotifier {
 
     _audioService.positionStream.listen((pos) {
       _position = pos;
+      positionNotifier.value = pos;
       _syncWidget();
-      notifyListeners();
     });
 
     _audioService.durationStream.listen((dur) {
@@ -374,6 +379,7 @@ class PlayerProvider with ChangeNotifier {
     if (index >= 0) {
       _currentIndex = index;
       _position = Duration.zero;
+      positionNotifier.value = Duration.zero;
       _duration = song.duration;
     }
     notifyListeners();
@@ -509,6 +515,8 @@ class PlayerProvider with ChangeNotifier {
   }
 
   Future<void> seek(Duration pos) async {
+    _position = pos;
+    positionNotifier.value = pos;
     await _audioService.seek(pos);
   }
 
@@ -696,5 +704,12 @@ class PlayerProvider with ChangeNotifier {
     } finally {
       _coverExtracting = false;
     }
+  }
+
+  @override
+  void dispose() {
+    positionNotifier.dispose();
+    _audioService.dispose();
+    super.dispose();
   }
 }

@@ -1,8 +1,50 @@
+import 'dart:async';
+
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../models/song.dart';
 import 'notification_art.dart';
+
+/// Notification transport buttons use Megaudio's own drawables: white glyphs on
+/// a translucent dark disc. Android 9 tints the media card with colours taken
+/// from the cover art, so plain white system icons disappear on bright covers.
+const MediaControl _notifPrevious = MediaControl(
+  androidIcon: 'drawable/megaudio_notif_previous',
+  label: 'Previous',
+  action: MediaAction.skipToPrevious,
+);
+
+const MediaControl _notifRewind = MediaControl(
+  androidIcon: 'drawable/megaudio_notif_fast_rewind',
+  label: 'Rewind',
+  action: MediaAction.rewind,
+);
+
+const MediaControl _notifPlay = MediaControl(
+  androidIcon: 'drawable/megaudio_notif_play',
+  label: 'Play',
+  action: MediaAction.play,
+);
+
+const MediaControl _notifPause = MediaControl(
+  androidIcon: 'drawable/megaudio_notif_pause',
+  label: 'Pause',
+  action: MediaAction.pause,
+);
+
+const MediaControl _notifFastForward = MediaControl(
+  androidIcon: 'drawable/megaudio_notif_fast_forward',
+  label: 'Fast Forward',
+  action: MediaAction.fastForward,
+);
+
+const MediaControl _notifNext = MediaControl(
+  androidIcon: 'drawable/megaudio_notif_next',
+  label: 'Next',
+  action: MediaAction.skipToNext,
+);
+
 
 /// Android media session handler.
 ///
@@ -54,11 +96,11 @@ class MegaudioAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
     final playing = player.playing;
     playbackState.add(playbackState.value.copyWith(
       controls: [
-        MediaControl.skipToPrevious,
-        MediaControl.rewind,
-        playing ? MediaControl.pause : MediaControl.play,
-        MediaControl.fastForward,
-        MediaControl.skipToNext,
+        _notifPrevious,
+        _notifRewind,
+        playing ? _notifPause : _notifPlay,
+        _notifFastForward,
+        _notifNext,
       ],
       systemActions: const {MediaAction.seek},
       androidCompactActionIndices: const [0, 2, 4],
@@ -73,9 +115,7 @@ class MegaudioAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
   /// Publishes the track metadata and starts playback. [playPath] may point
   /// at a converted copy (DSD -> PCM WAV) instead of the original file.
   Future<void> loadSong(Song song, {String? playPath}) async {
-    final art = song.coverPath.isNotEmpty
-        ? await notificationArtPath(song.coverPath)
-        : '';
+    final art = song.coverPath;
     mediaItem.add(MediaItem(
       id: song.id,
       title: song.title,
@@ -91,11 +131,37 @@ class MegaudioAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandl
       extras: {'specs': song.specsLabel},
     ));
     await player.setFilePath(playPath ?? song.path);
-    await player.play();
+    _startPlayback();
+    // Image processing must never delay the next track from starting, so the
+    // high-contrast artwork is applied in the background.
+    unawaited(_applyContrastArtwork(song));
+  }
+
+  /// Replaces the notification artwork with a high-contrast copy once the
+  /// track is already playing. Light covers are darkened so Android picks
+  /// white text and control icons instead of dark/low-contrast ones.
+  Future<void> _applyContrastArtwork(Song song) async {
+    if (song.coverPath.isEmpty) return;
+    try {
+      final art = await notificationArtPath(song.coverPath);
+      if (art == song.coverPath) return;
+      final item = mediaItem.value;
+      if (item == null || item.id != song.id) return; // track changed meanwhile
+      mediaItem.add(item.copyWith(artUri: Uri.file(art)));
+    } catch (_) {
+      // Artwork is cosmetic; keep the original cover on failure.
+    }
+  }
+
+  /// just_audio's `play()` future only completes when playback pauses, stops
+  /// or reaches the end of the track. Awaiting it would keep the load queue
+  /// locked for the whole song, making every later track change wait.
+  void _startPlayback() {
+    unawaited(player.play().catchError((Object _) {}));
   }
 
   @override
-  Future<void> play() => player.play();
+  Future<void> play() async => _startPlayback();
 
   @override
   Future<void> pause() => player.pause();

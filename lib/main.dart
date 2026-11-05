@@ -28,6 +28,9 @@ Future<void> main() async {
         androidStopForegroundOnPause: false,
         androidNotificationIcon: 'mipmap/ic_launcher',
         androidShowNotificationBadge: false,
+        // Amber accent keeps the transport icons visible on both dark media
+        // cards and older light notification themes.
+        notificationColor: UiColors.accent,
         // Keep the notification seek buttons in sync with the in-app +/-10s.
         fastForwardInterval: Duration(seconds: 10),
         rewindInterval: Duration(seconds: 10),

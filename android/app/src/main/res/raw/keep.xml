@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Notification transport icons are referenced by name at runtime
+  (MediaControl.androidIcon -> Resources.getIdentifier), so the resource
+  shrinker cannot see them and would strip them from the release APK.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/megaudio_notif_*" />
