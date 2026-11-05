@@ -7,6 +7,7 @@ import '../services/audio_output_service.dart';
 import '../services/eq_presets.dart';
 import '../theme/app_colors.dart';
 import '../utils/app_icons.dart';
+import '../widgets/mini_player_bar.dart';
 
 /// Flat, monochrome DSP / EQ settings page in the Walkman language:
 /// black canvas, hairline separators, section labels in small caps,
@@ -298,6 +299,8 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
           child: Divider(height: 0.5, thickness: 0.5, color: UiColors.line),
         ),
       ),
+      // Keep the now-playing bar reachable while tuning the DSP.
+      bottomNavigationBar: const MiniPlayerBar(),
       body: ListView(
         padding: const EdgeInsets.only(bottom: 32),
         children: [

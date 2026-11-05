@@ -2,6 +2,10 @@
 
 Mỗi mục tương ứng một bản build và được dùng làm release notes trên GitHub.
 
+## v1.10.4+21
+- Thanh thu gọn bài đang phát cũng xuất hiện ở màn hình DSP / Equalizer, đủ mặt trên mọi màn hình duyệt thư viện.
+- Không thay đổi thư viện, EQ hay lịch sử nghe khi cài đè.
+
 ## v1.10.3+20
 - Chuyển bài khi đang phát nhanh và ổn định hơn, kể cả khi chọn bài khác trong danh sách.
 - Thanh thông báo hiển thị rõ tên bài, ca sĩ và các nút điều khiển trên mọi ảnh bìa.
